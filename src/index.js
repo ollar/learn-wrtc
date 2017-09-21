@@ -1,4 +1,3 @@
-import adapter from 'webrtc-adapter';
 import { trace, uuid, _str } from './utils';
 
 const pcConfig = {
@@ -13,6 +12,32 @@ const pcConfig = {
 };
 const pcConstraints = null;
 const dataConstraint = null;
+
+const form = document.getElementById('sendForm');
+const input = document.getElementById('data');
+const messagesList = document.getElementById('messagesList');
+const button = document.querySelector('#sendForm button');
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  Object.keys(peers).forEach(key => {
+    let channel = peers[key].channel;
+
+    if (channel.readyState === 'open') {
+      channel.send(_str({
+        type: 'message',
+        text: input.value,
+      }));
+    }
+  });
+
+  let li = document.createElement('li');
+  li.className = 'outgoing';
+  li.innerHTML = input.value;
+  messagesList.appendChild(li);
+  form.reset();
+});
+
 
 // =============================================================================
 
@@ -32,8 +57,6 @@ ws.onmessage = function(e) {
 
   switch (data.type) {
     case 'newUser':
-      console.log('hello new user')
-
       // create new webrtc connection
       createConnection(data.uid);
       // create channel
@@ -42,10 +65,20 @@ ws.onmessage = function(e) {
       createOffer(data.uid);
       break;
 
-    case 'answer':
-      console.log('here is answer')
+    case 'offerFrom':
+      handleOffer(data);
+      break;
 
+    case 'answerFrom':
+      handleAnswer(data);
+      break;
 
+    case 'iceCandidateFrom':
+      handleIceCandidate(data);
+      break;
+
+    case 'channelClose':
+      console.log('dropConnection');
       break;
   }
 }
@@ -56,10 +89,12 @@ function receivedChannelCallback(e, toUid) {
   const channel = e.channel;
   const peer = peers[toUid];
 
-  console.log(peer);
+  peer.channel = channel;
+
+  bindChannelEvents(channel);
 }
 
-function receivedIceCandidate(e, toUid) {
+function onIceCandidate(e, toUid) {
   if (e.candidate) {
     ws.send(_str({
       type: 'iceCandidate',
@@ -75,12 +110,22 @@ function bindChannelEvents(channel) {
   channel.onclose = () => _onSendChannelStateChange(channel);
 
   channel.onmessage = (e) => {
-    console.log('hooray message')
+    let li = document.createElement('li');
+    li.innerHTML = JSON.parse(e.data).text;
+    messagesList.appendChild(li);
   }
 }
 
 function _onSendChannelStateChange(channel) {
   trace('chaqnnel state changed: ' + channel.readyState);
+
+  if (channel.readyState === 'open') {
+    input.removeAttribute('disabled');
+    button.removeAttribute('disabled');
+  } else {
+    input.setAttribute('disabled', true);
+    button.setAttribute('disabled', true);
+  }
 }
 
 
@@ -98,7 +143,7 @@ function createConnection(toUid) {
 
   connection.onicecandidate = function(e) {
     trace('received icecandidate');
-    return receivedIceCandidate(e, toUid);
+    return onIceCandidate(e, toUid);
   };
 
   peers[toUid] = {
@@ -134,4 +179,37 @@ function createOffer(toUid) {
       offer: _str(offer),
     }));
   }).catch(e => console.log(e));
+}
+
+function handleOffer(data) {
+  trace('handle offer from ' + data.fromUid);
+
+  const offer = new RTCSessionDescription(JSON.parse(data.offer));
+  const connection = createConnection(data.fromUid);
+
+  connection.setRemoteDescription(offer);
+
+  connection.createAnswer().then(answer => {
+    connection.setLocalDescription(answer);
+    ws.send(_str({
+      type: 'answer',
+      fromUid: UID,
+      toUid: data.fromUid,
+      answer: _str(answer),
+    }));
+  }).catch(e => console.log(e));
+}
+
+function handleAnswer(data) {
+  trace('handle answer from ' + data.fromUid);
+
+  const answer = new RTCSessionDescription(JSON.parse(data.answer));
+  const connection = peers[data.fromUid].connection;
+
+  connection.setRemoteDescription(answer);
+}
+
+function handleIceCandidate(data) {
+  const connection = peers[data.fromUid].connection;
+  connection.addIceCandidate(new RTCIceCandidate(JSON.parse(data.iceCandidate)));
 }

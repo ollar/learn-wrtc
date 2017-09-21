@@ -16,8 +16,5 @@
     "rollup-plugin-filesize": "^1.4.2",
     "rollup-plugin-node-resolve": "^3.0.0",
     "static-server": "^2.0.5"
-  },
-  "dependencies": {
-    "webrtc-adapter": "^5.0.4"
   }
 }
