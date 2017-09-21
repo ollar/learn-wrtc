@@ -1,0 +1,23 @@
+{
+  "name": "learn-wrtc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "./node_modules/.bin/rollup -c -w",
+    "serve": "cd public && ../node_modules/.bin/static-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "rollup": "^0.50.0",
+    "rollup-plugin-commonjs": "^8.2.1",
+    "rollup-plugin-filesize": "^1.4.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "static-server": "^2.0.5"
+  },
+  "dependencies": {
+    "webrtc-adapter": "^5.0.4"
+  }
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>webRTC chat</title>
+
+    <meta name="description" content="">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="cleartype" content="on">
+
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="content">
+      <div id="app" class="app">
+        <ul id="messagesList" class="messages-list"></ul>
+        <form id="sendForm" class="send-form">
+          <div class="input">
+            <input id="data" autocomplete="off" autofocus="true" placeholder ="type your message here" spellcheck="true" type="text" disabled />
+          </div>
+          <div class="button">
+            <button id="send" disabled>Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script type="text/javascript" src="./bundle.js"></script>
+  </body>
+</html>
