@@ -1,4 +1,4 @@
-import { trace, uuid, _str } from './utils';
+import { trace, _str } from './utils';
 
 const pcConfig = {
   iceServers: [

@@ -1,4 +1,4 @@
-import { trace, uuid, _str } from './utils';
+import { uuid, _str } from './utils';
 import {
   setPeers,
   setWS,
