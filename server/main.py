@@ -4,17 +4,25 @@ import logging
 import json
 # import uvloop
 
+
+# set global variables
+connections = {}
+
 logging.basicConfig(level=logging.INFO)
-# logging.basicConfig(level=logging.DEBUG)
 
 
 class WS_Handler:
     def __init__(self):
         self.connections = {}
+        self.path = '/'
         logging.info('server starts')
 
     async def __call__(self, websocket, path):
         # may set connections variables here
+        self.path = path
+
+        if not self.connections.get(path):
+            self.connections[path] = {}
 
         try:
             while True:
@@ -32,7 +40,7 @@ class WS_Handler:
         except websockets.exceptions.ConnectionClosed:
             ws = self._getConnection(data.get('uid', ''))
             if ws and not ws.open:
-                del self.connections[data['uid']]
+                del self.connections[self.path][data['uid']]
 
             logging.info('closed 1001')
 
@@ -48,7 +56,7 @@ class WS_Handler:
         return ws_types_handles_map[data.get('type')]
 
     def _getConnection(self, uid):
-        return self.connections.get(uid, None)
+        return self.connections[self.path].get(uid, None)
 
     async def sendData(self, uid, data):
         ws = self._getConnection(uid)
@@ -57,13 +65,13 @@ class WS_Handler:
             return await ws.send(json.dumps(data))
 
     async def _on_enter_room(self, data, websocket):
-        for key in self.connections.keys():
+        for key in self.connections[self.path].keys():
             await self.sendData(key, {
                 'type': 'newUser',
                 'uid': data.get('uid'),
             })
 
-        self.connections[data.get('uid')] = websocket
+        self.connections[self.path][data.get('uid')] = websocket
 
     async def _on_offer(self, data, *args):
         await self.sendData(data.get('toUid'), {
@@ -87,18 +95,17 @@ class WS_Handler:
         })
 
     async def _on_channel_close(self, data, *args):
-        for key in self.connections.keys():
+        for key in self.connections[self.path].keys():
             await self.sendData(key, {
                 'type': 'channelClose',
                 'uid': data['uid'],
             })
-        if len(self.connections) == 0:
-            del self.connections
+        if len(self.connections[self.path]) == 0:
+            del self.connections[self.path]
 
 
 
 loop = asyncio.get_event_loop()
-# loop.set_debug(enabled=True)
 ws_handler = WS_Handler()
 
 ws_server = websockets.serve(ws_handler, host='0.0.0.0', port=8765, loop=loop)

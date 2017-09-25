@@ -1,6 +1,8 @@
 import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import filesize from 'rollup-plugin-filesize';
+import inject from 'rollup-plugin-inject';
+import path from 'path';
 
 
 export default {
@@ -18,6 +20,13 @@ export default {
     }),
     commonjs({
       include: 'node_modules/**',
+      ignore: ['jquery'],
+    }),
+    inject({
+      modules: {
+        '_': 'underscore',
+        Backbone: path.resolve( 'src/backbone.config.js'),
+      },
     }),
   ]
 };
