@@ -14,7 +14,7 @@ const pcConfig = {
 const pcConstraints = null;
 const dataConstraint = null;
 
-let peers = {};
+let peers = new Backbone.Collection();
 let ws;
 let UID;
 
@@ -56,18 +56,16 @@ export function createConnection(toUid) {
     return onIceCandidate(e, toUid);
   };
 
-  peers[toUid] = {
-    connection,
-  };
+  peers.add({ uid: toUid, connection });
 
   return connection;
 }
 
 function receivedChannelCallback(e, toUid) {
   const channel = e.channel;
-  const peer = peers[toUid];
+  const peer = peers.get(toUid);
 
-  peer.channel = channel;
+  peer.set('channel', channel);
 
   bindChannelEvents(channel);
 }
@@ -97,12 +95,12 @@ function _onSendChannelStateChange(channel) {
 }
 
 export function createChannel(toUid) {
-  const peer = peers[toUid];
-  const channel = peer.connection.createDataChannel(toUid, dataConstraint);
+  const peer = peers.get(toUid);
+  const channel = peer.get('connection').createDataChannel(toUid, dataConstraint);
 
   trace('create channel: ' + toUid);
 
-  peer.channel = channel;
+  peer.set('channel', channel);
 
   // bind channel events
   bindChannelEvents(channel);
@@ -111,7 +109,7 @@ export function createChannel(toUid) {
 }
 
 export function createOffer(toUid) {
-  const connection = peers[toUid].connection;
+  const connection = peers.get(toUid).get('connection');
 
   connection.createOffer().then((offer) => {
     connection.setLocalDescription(offer);
@@ -147,12 +145,23 @@ export function handleAnswer(data) {
   trace('handle answer from ' + data.fromUid);
 
   const answer = new RTCSessionDescription(JSON.parse(data.answer));
-  const connection = peers[data.fromUid].connection;
+  const connection = peers.get(data.fromUid).get('connection');
 
   connection.setRemoteDescription(answer);
 }
 
 export function handleIceCandidate(data) {
-  const connection = peers[data.fromUid].connection;
+  const connection = peers.get(data.fromUid).get('connection');
   connection.addIceCandidate(new RTCIceCandidate(JSON.parse(data.iceCandidate)));
 }
+
+export function dropConnection(toUid) {
+    let peer = peers.get(toUid);
+    let connection = peer.get('connection');
+    let channel = peer.get('channel');
+
+    if (channel) channel.close();
+    if (connection) connection.close();
+    peers.remove(toUid);
+    // if (peers.length === 0) Sync.trigger('channelClose');
+  }

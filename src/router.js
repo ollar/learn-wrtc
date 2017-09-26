@@ -9,8 +9,11 @@ import {
   createOffer,
   handleOffer,
   handleAnswer,
-  handleIceCandidate } from './wrtc';
+  handleIceCandidate,
+  dropConnection,
+} from './wrtc';
 import MainView from './views/main';
+import PeersCollection from './collections/peers';
 
 const Router = Backbone.Router.extend({
   routes: {
@@ -28,7 +31,7 @@ const Router = Backbone.Router.extend({
 
     // set local variables
     const UID = uuid();
-    const peers = {};
+    const peers = new PeersCollection();
 
     // =============================================================================
 
@@ -69,7 +72,7 @@ const Router = Backbone.Router.extend({
           break;
 
         case 'channelClose':
-          console.log('dropConnection');
+          dropConnection(data.uid);
           break;
       }
     }

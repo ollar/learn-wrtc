@@ -5,19 +5,20 @@ import {
   setBindChannelEventsOnMessage,
 } from '../wrtc';
 
+import TextMessage from './textMessage';
+
 const MainView = Backbone.View.extend({
   initialize(options) {
     this.options = options || {};
 
     // set dom elements
     this.input = this.$('#data');
+    this.usersList = this.$('#usersList');
     this.messagesList = this.$('#messagesList');
     this.button = this.$('#sendForm button');
 
     setBindChannelEventsOnMessage((e) => {
-      let li = document.createElement('li');
-      li.innerHTML = JSON.parse(e.data).text;
-      messagesList.appendChild(li);
+      this.appendMessage(JSON.parse(e.data).text);
     });
 
     setOnSendChannelStateChangeHandler(channel => {
@@ -35,11 +36,17 @@ const MainView = Backbone.View.extend({
     'submit form': 'onSubmit',
   },
 
+  appendMessage(text, outgoing = false) {
+    let textMessage = new TextMessage({ text, outgoing });
+
+    this.messagesList[0].appendChild(textMessage.render().el);
+  },
+
   onSubmit(e) {
     let peers = this.options.peers;
     e.preventDefault();
-    Object.keys(peers).forEach(key => {
-      let channel = peers[key].channel;
+    peers.each(peer => {
+      let channel = peer.get('channel');
 
       if (channel.readyState === 'open') {
         channel.send(_str({
@@ -49,10 +56,7 @@ const MainView = Backbone.View.extend({
       }
     });
 
-    let li = document.createElement('li');
-    li.className = 'outgoing';
-    li.innerHTML = this.input[0].value;
-    messagesList.appendChild(li);
+    this.appendMessage(this.input[0].value, true);
     e.target.reset();
   }
 });
