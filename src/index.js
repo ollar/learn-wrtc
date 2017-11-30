@@ -1,5 +1,6 @@
-import Router from './router';
+import AppRouter from './router';
 
 
-const router = new Router();
+const router = new AppRouter();
+
 Backbone.history.start();
