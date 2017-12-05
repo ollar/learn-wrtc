@@ -24,11 +24,13 @@ export default function template(data) {
     return `
         <form class="test">
           <div>
-            <input name="username">
+            <label for="username">username</label>
+            <input name="username" id="username">
           </div>
 
           <div>
-          <select name="colour">
+          <label for="colour">colour</label>
+          <select name="colour" id="colour">
             ${_.map(colours, (key, value) => `<option value="${key}">${value}</option>`).join('')}
           </select>
           </div>

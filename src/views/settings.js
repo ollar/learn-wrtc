@@ -4,20 +4,16 @@ const SettingsView = Backbone.View.extend({
   template: Template,
 
   events: {
-    'click .test': 'submit',
+    'submit form': 'submit',
   },
 
   submit(e) {
     e.preventDefault();
-    console.log('this')
+    console.log(e)
   },
 
   render() {
-    // this.el.innerHTML = this.template(this.model);
-    this.$el.html(this.template(this.model));
-
-    console.log(this.$el)
-
+    this.el.innerHTML = this.template(this.model);
     return this;
   }
 });

@@ -26,15 +26,20 @@ const Router = Backbone.Router.extend({
   app: document.getElementById('app'),
 
   execute(callback, args, name) {
-    // const user = window.localStorage.getItem('user');
+    const user = window.localStorage.getItem('user');
 
-    // if (user) user = JSON.parse(user);
+    if (user) user = JSON.parse(user);
 
-    // if (!user || !user.name) {
-    //   return Backbone.history.navigate('settings', true);
-    // }
+    if (name !== 'settings' && (!user || !user.name)) {
+      return this._goToSettings();
+    }
 
     return Backbone.Router.prototype.execute.apply(this, arguments);
+  },
+
+  _goToSettings() {
+    Backbone.history.navigate('settings', true);
+    return false;
   },
 
   _insertView(view) {
