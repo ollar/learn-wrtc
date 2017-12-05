@@ -6,8 +6,15 @@ import {
 } from '../wrtc';
 
 import TextMessage from './textMessage';
+import Template from '../templates/main';
 
 const MainView = Backbone.View.extend({
+  events: {
+    'submit form': 'onSubmit',
+  },
+
+  template: Template,
+
   initialize(options) {
     this.options = options || {};
 
@@ -32,10 +39,6 @@ const MainView = Backbone.View.extend({
     });
   },
 
-  events: {
-    'submit form': 'onSubmit',
-  },
-
   appendMessage(text, outgoing = false) {
     let textMessage = new TextMessage({ text, outgoing });
 
@@ -58,6 +61,12 @@ const MainView = Backbone.View.extend({
 
     this.appendMessage(this.input[0].value, true);
     e.target.reset();
+  },
+
+  render() {
+    this.el.innerHTML = this.template(this.model);
+
+    return this;
   }
 });
 

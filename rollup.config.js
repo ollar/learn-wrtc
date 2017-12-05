@@ -20,7 +20,7 @@ export default {
     }),
     commonjs({
       include: 'node_modules/**',
-      ignore: ['jquery'],
+      // ignore: ['jquery'],
     }),
     inject({
       modules: {

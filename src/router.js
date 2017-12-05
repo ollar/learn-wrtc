@@ -13,16 +13,43 @@ import {
   dropConnection,
 } from './wrtc';
 import MainView from './views/main';
+import SettingsView from './views/settings';
 import PeersCollection from './collections/peers';
 
 const Router = Backbone.Router.extend({
   routes: {
     '': 'home',
-    ':roomId': 'enterRoom',
+    'settings': 'settings',
+    'room/:roomId': 'enterRoom',
+  },
+
+  app: document.getElementById('app'),
+
+  execute(callback, args, name) {
+    // const user = window.localStorage.getItem('user');
+
+    // if (user) user = JSON.parse(user);
+
+    // if (!user || !user.name) {
+    //   return Backbone.history.navigate('settings', true);
+    // }
+
+    return Backbone.Router.prototype.execute.apply(this, arguments);
+  },
+
+  _insertView(view) {
+    if (this.app.childNodes.length) {
+      return this.app.replaceChild(
+        view,
+        this.app.childNodes[0]
+      );
+    }
+
+    return this.app.appendChild(view);
   },
 
   home() {
-    Backbone.history.navigate(uuid(), true);
+    return Backbone.history.navigate('room/' + uuid(), true);
   },
 
   enterRoom(roomId) {
@@ -77,13 +104,20 @@ const Router = Backbone.Router.extend({
       }
     }
 
-    return new MainView({
+    const mainView = new MainView({
       ws,
       UID,
       peers,
-      el: '#app',
     });
-  }
+
+    this._insertView(mainView.render().el);
+  },
+
+  settings() {
+    const settingsView = new SettingsView();
+
+    this._insertView(settingsView.render().el);
+  },
 });
 
 export default Router;
