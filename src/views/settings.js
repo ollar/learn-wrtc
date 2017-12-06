@@ -1,4 +1,5 @@
 import Template from '../templates/settings';
+import serialize from '../utils/serialize-form';
 
 const SettingsView = Backbone.View.extend({
   template: Template,
@@ -10,6 +11,8 @@ const SettingsView = Backbone.View.extend({
   submit(e) {
     e.preventDefault();
     console.log(e)
+
+    console.log(serialize(e.target))
   },
 
   render() {

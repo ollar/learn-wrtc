@@ -1,5 +1,3 @@
-import AppRouter from './router';
+import { init } from './app';
 
-const router = new AppRouter();
-
-Backbone.history.start();
+init();

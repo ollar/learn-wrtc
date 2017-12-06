@@ -15,6 +15,7 @@ import {
 import MainView from './views/main';
 import SettingsView from './views/settings';
 import PeersCollection from './collections/peers';
+import { getMe } from './app';
 
 const Router = Backbone.Router.extend({
   routes: {
@@ -24,6 +25,8 @@ const Router = Backbone.Router.extend({
   },
 
   app: document.getElementById('app'),
+
+  me: getMe(),
 
   execute(callback, args, name) {
     const user = window.localStorage.getItem('user');
@@ -120,6 +123,8 @@ const Router = Backbone.Router.extend({
 
   settings() {
     const settingsView = new SettingsView();
+
+    console.log(this.me)
 
     this._insertView(settingsView.render().el);
   },
