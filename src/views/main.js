@@ -48,6 +48,8 @@ const MainView = Backbone.View.extend({
     peers.each(peer => {
       let channel = peer.get('channel');
 
+      if (peer.get('uid') === this.options.UID) return;
+
       if (channel.readyState === 'open') {
         channel.send(_str({
           type: 'message',

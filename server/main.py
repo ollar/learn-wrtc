@@ -4,23 +4,18 @@ import logging
 import json
 # import uvloop
 
-
-# set global variables
-connections = {}
-
+# PYTHONASYNCIODEBUG = True
+# logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
 
 class WS_Handler:
     def __init__(self):
         self.connections = {}
-        self.path = '/'
         logging.info('server starts')
 
     async def __call__(self, websocket, path):
         # may set connections variables here
-        self.path = path
-
         if not self.connections.get(path):
             self.connections[path] = {}
 
@@ -35,16 +30,18 @@ class WS_Handler:
 
                 logging.info('got message type: {}'.format(data['type']))
 
-                await self.dispatch_ws_types(data)(data, websocket)
+                self.connections[path][data.get('uid')] = websocket
+
+                await self.dispatch_ws_types(data, path)
 
         except websockets.exceptions.ConnectionClosed:
-            ws = self._getConnection(data.get('uid', ''))
+            ws = self._getConnection(data.get('uid', ''), path)
             if ws and not ws.open:
-                del self.connections[self.path][data['uid']]
+                del self.connections[path][data['uid']]
 
             logging.info('closed 1001')
 
-    def dispatch_ws_types(self, data):
+    def dispatch_ws_types(self, data, path):
         ws_types_handles_map = {
             'enterRoom': self._on_enter_room,
             'channelClose': self._on_channel_close,
@@ -53,62 +50,59 @@ class WS_Handler:
             'iceCandidate': self._on_ice_candidate,
         }
 
-        return ws_types_handles_map[data.get('type')]
+        return ws_types_handles_map[data.get('type')](data, path)
 
-    def _getConnection(self, uid):
-        return self.connections[self.path].get(uid, None)
+    def _getConnection(self, uid, path):
+        return self.connections[path].get(uid, None)
 
-    async def sendData(self, uid, data):
-        ws = self._getConnection(uid)
+    async def sendData(self, uid, path, data):
+        ws = self._getConnection(uid, path)
 
         if ws and ws.open:
             return await ws.send(json.dumps(data))
 
-    async def _on_enter_room(self, data, websocket):
-        for key in self.connections[self.path].keys():
-            await self.sendData(key, {
+    async def _on_enter_room(self, data, path):
+        for key in self.connections[path].keys():
+            await self.sendData(key, path, {
                 'type': 'newUser',
                 'uid': data.get('uid'),
             })
 
-        self.connections[self.path][data.get('uid')] = websocket
-
-    async def _on_offer(self, data, *args):
-        await self.sendData(data.get('toUid'), {
+    async def _on_offer(self, data, path):
+        await self.sendData(data.get('toUid'), path, {
             'type': 'offerFrom',
             'fromUid': data.get('fromUid'),
             'offer': data.get('offer'),
         })
 
-    async def _on_answer(self, data, *args):
-        await self.sendData(data.get('toUid'), {
+    async def _on_answer(self, data, path):
+        await self.sendData(data.get('toUid'), path, {
             'type': 'answerFrom',
             'fromUid': data.get('fromUid'),
             'answer': data.get('answer'),
         })
 
-    async def _on_ice_candidate(self, data, *args):
-        await self.sendData(data.get('toUid'), {
+    async def _on_ice_candidate(self, data, path):
+        await self.sendData(data.get('toUid'), path, {
             'type': 'iceCandidateFrom',
             'fromUid': data.get('fromUid'),
             'iceCandidate': data.get('iceCandidate'),
         })
 
-    async def _on_channel_close(self, data, *args):
-        for key in self.connections[self.path].keys():
-            await self.sendData(key, {
+    async def _on_channel_close(self, data, path):
+        for key in self.connections[path].keys():
+            await self.sendData(key, path, {
                 'type': 'channelClose',
                 'uid': data['uid'],
             })
-        if len(self.connections[self.path]) == 0:
-            del self.connections[self.path]
-
-
+        if len(self.connections[path]) == 0:
+            del self.connections[path]
 
 loop = asyncio.get_event_loop()
+# loop.set_debug(enabled=True)
 ws_handler = WS_Handler()
 
-ws_server = websockets.serve(ws_handler, host='0.0.0.0', port=8765, loop=loop)
+ws_server = websockets.serve(ws_handler, host='localhost', port=8765, loop=loop)
 future = asyncio.ensure_future(ws_server)
 
 loop.run_forever()

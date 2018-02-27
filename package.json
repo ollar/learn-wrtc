@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "./node_modules/.bin/rollup -c -w",
-    "serve": "cd public && ../node_modules/.bin/static-server"
+    "serve": "./node_modules/.bin/serve ./public"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "rollup-plugin-filesize": "^1.4.2",
     "rollup-plugin-inject": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.0.0",
+    "serve": "^6.4.9",
     "static-server": "^2.0.5"
   },
   "dependencies": {

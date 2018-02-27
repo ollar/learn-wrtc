@@ -23,6 +23,7 @@ let onSendChannelStateChangeHandler = () => {};
 
 export function setPeers(_peers) {
   peers = _peers;
+  window.peers = peers;
 }
 
 export function setWS(_ws) {

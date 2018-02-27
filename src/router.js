@@ -27,7 +27,7 @@ const Router = Backbone.Router.extend({
 
   enterRoom(roomId) {
     // establist websocket connection
-    const ws = new WebSocket('ws://0.0.0.0:8765');
+    const ws = new WebSocket('ws://localhost:8765/' + roomId);
 
     // set local variables
     const UID = uuid();
